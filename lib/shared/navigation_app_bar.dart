@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../app_routes.dart'; // Ajuste o caminho de acordo com o seu projeto
+import '../app_routes.dart'; 
 
 class NavigationAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -16,10 +16,9 @@ class NavigationAppBar extends StatelessWidget implements PreferredSizeWidget {
           icon: const Icon(Icons.menu),
           tooltip: 'Navegar para...',
           onSelected: (route) {
-            // Se o usuário já estiver na rota selecionada, não faz nada
+            
             if (GoRouterState.of(context).matchedLocation == route) return;
-
-            // Navega para a página escolhida
+           
             context.go(route);
           },
           itemBuilder: (BuildContext context) => [
@@ -47,7 +46,7 @@ class NavigationAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  // Define a altura padrão da AppBar exigida pelo Flutter
+  
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }

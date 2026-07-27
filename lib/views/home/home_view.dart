@@ -30,7 +30,7 @@ void initState() {
   Widget build(BuildContext context) {
     return Scaffold(
       
-      // 2. Chame o widget passando o título desejado para a Home
+      
       appBar: const NavigationAppBar(title: 'Minhas Transações'), 
   
       body: ValueListenableBuilder<List<TransactionModel>>(
@@ -54,7 +54,7 @@ void initState() {
 
           return Column(
             children: [
-              // --- CARD DE RESUMO DO TOTAL ---
+              
               Card(
                 margin: const EdgeInsets.all(16.0),
                 elevation: 2,

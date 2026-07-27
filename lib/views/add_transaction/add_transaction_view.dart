@@ -11,18 +11,18 @@ class AddTransactionView extends StatefulWidget {
 }
 
 class _AddTransactionViewState extends State<AddTransactionView> {
-  // Chave global para gerenciar e validar o formulário
+
   final _formKey = GlobalKey<FormState>();
 
-  // Controladores dos campos de texto
+ 
   final _establishmentController = TextEditingController();
   final _amountController = TextEditingController();
 
-  // Valores selecionáveis
+  
   String? _selectedCategory;
   DateTime _selectedDate = DateTime.now();
 
-  // Categorias pré-definidas para o usuário escolher
+  
   final List<String> _categories = [
     'Alimentação',
     'Mercado',
@@ -40,7 +40,7 @@ class _AddTransactionViewState extends State<AddTransactionView> {
     super.dispose();
   }
 
-  // Função para abrir o calendário nativo do Flutter
+  
   Future<void> _pickDate() async {
     final pickedDate = await showDatePicker(
       context: context,
@@ -56,10 +56,10 @@ class _AddTransactionViewState extends State<AddTransactionView> {
     }
   }
 
-  // Função para salvar e retornar a nova transação
+  
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
-      // Converte o texto do valor (ex: "45.50" ou "45,50") em double
+      
       final amountText = _amountController.text.replaceAll(',', '.');
       final amount = double.tryParse(amountText) ?? 0.0;
 
@@ -72,7 +72,7 @@ class _AddTransactionViewState extends State<AddTransactionView> {
         description: null, // Campo opcional, pode ser adicionado futuramente 
       );
 
-      // Retorna para a tela anterior passando o objeto da nova transação
+      
       context.pop(newTransaction);
     }
   }
@@ -81,7 +81,7 @@ class _AddTransactionViewState extends State<AddTransactionView> {
   Widget build(BuildContext context) {
     return Scaffold(
       
-      // 2. Chame o widget passando o título desejado para a Home
+      
       appBar: const NavigationAppBar(title: 'Minhas Transações'), 
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

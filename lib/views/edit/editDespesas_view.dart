@@ -15,14 +15,14 @@ class EditDespesasView extends StatefulWidget {
 }
 
 class _EditDespesasViewState extends State<EditDespesasView> {
-  // 👈 2. Instancie a ViewModel AQUI, no topo da classe de estado:
+  
   final viewModel = EditDespesasViewModel();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       
-      // 2. Chame o widget passando o título desejado para a Home
+      
       appBar: const NavigationAppBar(title: 'Minhas Transações'), 
       body: Text('Tela de edição de transações'),
     );    

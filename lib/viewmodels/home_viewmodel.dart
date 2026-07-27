@@ -11,7 +11,7 @@ Future<void> loadTransactions() async {
     final list = await DatabaseService.instance.getAllTransactions();
     transactionsNotifier.value = list;
   }
-// --- AÇÕES ---
+
 
 Future<void> addTransaction(TransactionModel transaction) async {
     await DatabaseService.instance.insertTransaction(transaction);
@@ -23,24 +23,22 @@ Future<void> addTransaction(TransactionModel transaction) async {
     await loadTransactions();
   }
 
-  // --- RELATÓRIOS E CÁLCULOS ---
+  
 
-  /// 1. Filtra todas as despesas de um mês e ano específicos
+
   List<TransactionModel> getTransactionsByMonth(int month, int year) {
     return transactions.where((t) {
       return t.date.month == month && t.date.year == year;
     }).toList();
   }
 
-  /// 2. Total de gastos em um determinado mês
+ 
   double getTotalByMonth(int month, int year) {
     final monthList = getTransactionsByMonth(month, year);
     return monthList.fold(0.0, (sum, item) => sum + item.amount);
   }
 
-  /// 3. Relatório: Gastos agrupados POR CATEGORIA em um determinado mês
-  /// Retorna um Map onde a CHAVE é o nome da Categoria e o VALOR é a soma gasta.
-  /// Ex: {'Alimentação': 450.00, 'Lazer': 120.00}
+
   Map<String, double> getExpensesByCategory(int month, int year) {
     final monthList = getTransactionsByMonth(month, year);
     final Map<String, double> report = {};
@@ -53,8 +51,7 @@ Future<void> addTransaction(TransactionModel transaction) async {
     return report;
   }
 
-  /// 4. Relatório: Gastos agrupados POR ESTABELECIMENTO em um determinado mês
-  /// Ex: {'Supermercado X': 320.00, 'Posto Y': 150.00}
+  
   Map<String, double> getExpensesByEstablishment(int month, int year) {
     final monthList = getTransactionsByMonth(month, year);
     final Map<String, double> report = {};
