@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../app_routes.dart';
-import '../../models/transaction_model.dart';
-import '../../viewmodels/editDespesas_viewmodel.dart';
-import '../../shared/navigation_app_bar.dart';
+import '../app_routes.dart';
+import '../models/transaction_model.dart';
+import '../viewmodels/editDespesas_viewmodel.dart';
+import '../shared/navigation_app_bar.dart';
 
 class EditDespesasView extends StatefulWidget {
   const EditDespesasView({super.key});

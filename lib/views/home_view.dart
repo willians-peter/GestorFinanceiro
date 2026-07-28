@@ -1,42 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../app_routes.dart';
-import '../../models/transaction_model.dart';
-import '../../viewmodels/home_viewmodel.dart';
-import '../../shared/navigation_app_bar.dart';
+import '../app_routes.dart';
+import '../models/transaction_model.dart';
+import '../viewmodels/home_viewmodel.dart';
+import '../shared/navigation_app_bar.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
 
-@override
+  @override
   State<HomeView> createState() => _HomeViewState();
 }
 
 class _HomeViewState extends State<HomeView> {
-  // 👈 2. Instancie a ViewModel AQUI, no topo da classe de estado:
   final viewModel = HomeViewModel();
 
-@override
-void initState() {
-  super.initState();
-  viewModel.loadTransactions(); // 👈 Carrega do SQLite ao abrir a tela
-}
+  @override
+  void initState() {
+    super.initState();
+    viewModel.loadTransactions();
+  }
+
   @override
   void dispose() {
-    viewModel.dispose(); // Libera o Notifier da memória quando a tela for fechada
+    viewModel.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      
-      
-      appBar: const NavigationAppBar(title: 'Minhas Transações'), 
-  
+      appBar: const NavigationAppBar(title: 'Início'),
       body: ValueListenableBuilder<List<TransactionModel>>(
         valueListenable: viewModel.transactionsNotifier,
         builder: (context, transactions, child) {
-          // Estado vazio
           if (transactions.isEmpty) {
             return const Center(
               child: Text(
@@ -46,15 +43,14 @@ void initState() {
             );
           }
 
-          // Cálculo do valor total exibido
-          final total = transactions.fold(
-            0.0,
-            (sum, item) => sum + item.amount,
-          );
+          // Busca apenas as 5 mais recentes e o subtotal do mês
+          final recentList = viewModel.recentTransactions(limit: 5);
+          final subtotal = viewModel.subtotalCurrentMonth;
 
           return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              
+              // --- CARD DE SUBTOTAL DO MÊS VIGENTE ATÉ HOJE ---
               Card(
                 margin: const EdgeInsets.all(16.0),
                 elevation: 2,
@@ -64,15 +60,27 @@ void initState() {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Total do Período:',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Subtotal do Mês',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            'Até a data atual',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey,
+                            ),
+                          ),
+                        ],
                       ),
                       Text(
-                        'R\$ ${total.toStringAsFixed(2).replaceAll('.', ',')}',
+                        'R\$ ${subtotal.toStringAsFixed(2).replaceAll('.', ',')}',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -84,14 +92,28 @@ void initState() {
                 ),
               ),
 
-              // --- LISTA DE TRANSAÇÕES ---
+              // --- TÍTULO DA SEÇÃO ---
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Text(
+                  'Últimos Lançamentos',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+
+              // --- LISTA RECENTE ---
               Expanded(
                 child: ListView.builder(
-                  itemCount: transactions.length,
+                  itemCount: recentList.length,
                   itemBuilder: (context, index) {
-                    final transaction = transactions[index];
+                    final transaction = recentList[index];
                     final formattedDate =
                         '${transaction.date.day.toString().padLeft(2, '0')}/${transaction.date.month.toString().padLeft(2, '0')}/${transaction.date.year}';
+
+                    // Define o nome de exibição (se establishment for null, usa o id da subcategoria ou um texto padrão)
+                    final titleText = (transaction.establishment != null && transaction.establishment!.isNotEmpty)
+                        ? transaction.establishment!
+                        : transaction.subCategoryId; // Ou um rótulo genérico se preferir
 
                     return Dismissible(
                       key: Key(transaction.id),
@@ -106,7 +128,7 @@ void initState() {
                         viewModel.removeTransaction(transaction.id);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text('${transaction.establishment} removido.'),
+                            content: Text('$titleText removido.'),
                           ),
                         );
                       },
@@ -116,18 +138,17 @@ void initState() {
                           vertical: 4.0,
                         ),
                         child: ListTile(
-                          leading: CircleAvatar(
-                            child: Icon(_getCategoryIcon(transaction.category)),
+                          leading: const CircleAvatar(
+                            child: Icon(Icons.receipt_long),
                           ),
                           title: Text(
-                            transaction.establishment,
+                            titleText,
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('${transaction.category} • $formattedDate'),
-                              // Se houver descrição opcional, exibe abaixo:
+                              Text(formattedDate),
                               if (transaction.description != null &&
                                   transaction.description!.isNotEmpty)
                                 Text(
@@ -169,25 +190,5 @@ void initState() {
         child: const Icon(Icons.add),
       ),
     );
-  }
-
-  // Mapeamento de ícones das categorias
-  IconData _getCategoryIcon(String category) {
-    switch (category) {
-      case 'Alimentação':
-        return Icons.restaurant;
-      case 'Mercado':
-        return Icons.shopping_cart;
-      case 'Transporte / Combustível':
-        return Icons.directions_car;
-      case 'Moradia':
-        return Icons.home;
-      case 'Lazer':
-        return Icons.sports_esports;
-      case 'Saúde':
-        return Icons.medical_services;
-      default:
-        return Icons.attach_money;
-    }
   }
 }

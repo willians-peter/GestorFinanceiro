@@ -40,6 +40,13 @@ class NavigationAppBar extends StatelessWidget implements PreferredSizeWidget {
                 title: Text('Editar Despesas'),
               ),
             ),
+              const PopupMenuItem<String>(
+              value: AppRoutes.categoryAjust,
+              child: ListTile(
+                leading: Icon(Icons.edit),
+                title: Text('Ajustar Categorias'),
+              ),
+            ),
           ],
         ),
       ],
