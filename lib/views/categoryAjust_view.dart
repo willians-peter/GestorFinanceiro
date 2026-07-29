@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/category_model.dart';
+import '../models/sub_category_model.dart';
 import '../services/database_service.dart';
 import '../shared/navigation_app_bar.dart';
 
@@ -12,37 +13,53 @@ class CategoryAjustView extends StatefulWidget {
 
 class _CategoryAjustViewState extends State<CategoryAjustView> {
   List<CategoryModel> _categories = [];
+  // Mapeia o ID da Categoria para sua lista de Subcategorias
+  final Map<String, List<SubCategoryModel>> _subCategoriesMap = {};
+
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    _loadData();
   }
 
-  /// Carrega as categorias salvas do banco de dados
-  Future<void> _loadCategories() async {
+  /// Carrega Categorias e suas respectivas Subcategorias do banco
+  Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
       final categories = await DatabaseService.instance.getAllCategories();
+      final Map<String, List<SubCategoryModel>> tempMap = {};
+
+      for (var cat in categories) {
+        final subs = await DatabaseService.instance
+            .getSubCategoriesByCategoryId(cat.idCategory);
+        tempMap[cat.idCategory] = subs;
+      }
+
       setState(() {
         _categories = categories;
+        _subCategoriesMap.clear();
+        _subCategoriesMap.addAll(tempMap);
         _isLoading = false;
       });
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erro ao carregar categorias: $e')),
+          SnackBar(content: Text('Erro ao carregar dados: $e')),
         );
       }
     }
   }
 
-  /// Abre o modal para Criar ou Editar uma Categoria
+  // ==========================================
+  // LÓGICA DE CATEGORIAS
+  // ==========================================
+
   void _showCategoryDialog({CategoryModel? category}) {
     final controller = TextEditingController(
-      text: category != null ? category.categoryName : '',
+      text: category?.categoryName ?? '',
     );
     final formKey = GlobalKey<FormState>();
 
@@ -59,15 +76,10 @@ class _CategoryAjustViewState extends State<CategoryAjustView> {
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
                 labelText: 'Nome da Categoria',
-                hintText: 'Ex: Alimentação, Lazer...',
                 border: OutlineInputBorder(),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Informe o nome da categoria';
-                }
-                return null;
-              },
+              validator: (val) =>
+                  (val == null || val.trim().isEmpty) ? 'Informe o nome' : null,
             ),
           ),
           actions: [
@@ -79,26 +91,24 @@ class _CategoryAjustViewState extends State<CategoryAjustView> {
               onPressed: () async {
                 if (formKey.currentState!.validate()) {
                   final name = controller.text.trim();
-
                   if (category == null) {
-                    // Nova Categoria
-                    final newCategory = CategoryModel(
-                      idCategory: DateTime.now().millisecondsSinceEpoch.toString(),
-                      categoryName: name,
+                    await DatabaseService.instance.insertCategory(
+                      CategoryModel(
+                        idCategory: DateTime.now().millisecondsSinceEpoch.toString(),
+                        categoryName: name,
+                      ),
                     );
-                    await DatabaseService.instance.insertCategory(newCategory);
                   } else {
-                    // Atualiza Categoria existente
-                    final updatedCategory = CategoryModel(
-                      idCategory: category.idCategory,
-                      categoryName: name,
+                    await DatabaseService.instance.updateCategory(
+                      CategoryModel(
+                        idCategory: category.idCategory,
+                        categoryName: name,
+                      ),
                     );
-                    await DatabaseService.instance.updateCategory(updatedCategory);
                   }
-
                   if (mounted) {
                     Navigator.of(context).pop();
-                    _loadCategories(); // Recarrega a lista
+                    _loadData();
                   }
                 }
               },
@@ -110,16 +120,14 @@ class _CategoryAjustViewState extends State<CategoryAjustView> {
     );
   }
 
-  /// Exibe confirmação antes de excluir
-  void _confirmDelete(CategoryModel category) {
+  void _confirmDeleteCategory(CategoryModel category) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: const Text('Excluir Categoria'),
           content: Text(
-            'Tem certeza que deseja excluir "${category.categoryName}"? '
-            'Isso também afetará as subcategorias e despesas vinculadas a ela.',
+            'Excluir "${category.categoryName}" também apagará todas as suas subcategorias e despesas associadas. Deseja continuar?',
           ),
           actions: [
             TextButton(
@@ -131,7 +139,7 @@ class _CategoryAjustViewState extends State<CategoryAjustView> {
                 await DatabaseService.instance.deleteCategory(category.idCategory);
                 if (mounted) {
                   Navigator.of(context).pop();
-                  _loadCategories();
+                  _loadData();
                 }
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
@@ -143,10 +151,118 @@ class _CategoryAjustViewState extends State<CategoryAjustView> {
     );
   }
 
+  // ==========================================
+  // LÓGICA DE SUBCATEGORIAS
+  // ==========================================
+
+  void _showSubCategoryDialog({
+    required String categoryId,
+    SubCategoryModel? subCategory,
+  }) {
+    final controller = TextEditingController(
+      text: subCategory?.subCategoryName ?? '',
+    );
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(subCategory == null ? 'Nova Subcategoria' : 'Editar Subcategoria'),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: controller,
+              autofocus: true,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Nome da Subcategoria',
+                border: OutlineInputBorder(),
+              ),
+              validator: (val) =>
+                  (val == null || val.trim().isEmpty) ? 'Informe o nome' : null,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (formKey.currentState!.validate()) {
+                  final name = controller.text.trim();
+                  if (subCategory == null) {
+                    await DatabaseService.instance.insertSubCategory(
+                      SubCategoryModel(
+                        idSubCategory: DateTime.now().millisecondsSinceEpoch.toString(),
+                        idCategory: categoryId,
+                        subCategoryName: name,
+                      ),
+                    );
+                  } else {
+                    await DatabaseService.instance.updateSubCategory(
+                      SubCategoryModel(
+                        idSubCategory: subCategory.idSubCategory,
+                        idCategory: categoryId,
+                        subCategoryName: name,
+                      ),
+                    );
+                  }
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                    _loadData();
+                  }
+                }
+              },
+              child: const Text('Salvar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirmDeleteSubCategory(SubCategoryModel subCategory) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Excluir Subcategoria'),
+          content: Text(
+            'Tem certeza que deseja excluir "${subCategory.subCategoryName}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () async {
+                await DatabaseService.instance
+                    .deleteSubCategory(subCategory.idSubCategory);
+                if (mounted) {
+                  Navigator.of(context).pop();
+                  _loadData();
+                }
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Excluir'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // ==========================================
+  // BUILD
+  // ==========================================
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const NavigationAppBar(title: 'Minhas categorias'),
+      appBar: const NavigationAppBar(title: 'Minhas Categorias'),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _categories.isEmpty
@@ -164,41 +280,106 @@ class _CategoryAjustViewState extends State<CategoryAjustView> {
                       ElevatedButton.icon(
                         onPressed: () => _showCategoryDialog(),
                         icon: const Icon(Icons.add),
-                        label: const Text('Criar primeira categoria'),
+                        label: const Text('Criar Categoria'),
                       ),
                     ],
                   ),
                 )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16.0),
+              : ListView.builder(
+                  padding: const EdgeInsets.all(12.0),
                   itemCount: _categories.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
                   itemBuilder: (context, index) {
                     final category = _categories[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        child: Text(
-                          category.categoryName.isNotEmpty
-                              ? category.categoryName[0].toUpperCase()
-                              : '?',
-                        ),
-                      ),
-                      title: Text(
-                        category.categoryName,
-                        style: const TextStyle(fontWeight: FontWeight.w500),
-                      ),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.blue),
-                            tooltip: 'Editar',
-                            onPressed: () => _showCategoryDialog(category: category),
+                    final subCategories =
+                        _subCategoriesMap[category.idCategory] ?? [];
+
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ExpansionTile(
+                        leading: CircleAvatar(
+                          child: Text(
+                            category.categoryName.isNotEmpty
+                                ? category.categoryName[0].toUpperCase()
+                                : '?',
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            tooltip: 'Excluir',
-                            onPressed: () => _confirmDelete(category),
+                        ),
+                        title: Text(
+                          category.categoryName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        subtitle: Text('${subCategories.length} subcategoria(s)'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit, color: Colors.blue),
+                              tooltip: 'Editar Categoria',
+                              onPressed: () =>
+                                  _showCategoryDialog(category: category),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              tooltip: 'Excluir Categoria',
+                              onPressed: () =>
+                                  _confirmDeleteCategory(category),
+                            ),
+                          ],
+                        ),
+                        children: [
+                          const Divider(height: 1),
+                          // Subcategorias
+                          ...subCategories.map((sub) {
+                            return ListTile(
+                              contentPadding: const EdgeInsets.only(
+                                left: 32,
+                                right: 16,
+                              ),
+                              leading: const Icon(
+                                Icons.subdirectory_arrow_right,
+                                size: 20,
+                                color: Colors.grey,
+                              ),
+                              title: Text(sub.subCategoryName),
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit_outlined,
+                                        size: 20, color: Colors.blueGrey),
+                                    onPressed: () => _showSubCategoryDialog(
+                                      categoryId: category.idCategory,
+                                      subCategory: sub,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline,
+                                        size: 20, color: Colors.redAccent),
+                                    onPressed: () =>
+                                        _confirmDeleteSubCategory(sub),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
+                          // Botão de Adicionar Subcategoria
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 8.0,
+                            ),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                onPressed: () => _showSubCategoryDialog(
+                                  categoryId: category.idCategory,
+                                ),
+                                icon: const Icon(Icons.add, size: 18),
+                                label: const Text('Adicionar Subcategoria'),
+                              ),
+                            ),
                           ),
                         ],
                       ),

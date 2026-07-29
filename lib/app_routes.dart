@@ -4,13 +4,14 @@ import 'views/home_view.dart';
 import 'views/add_transaction_view.dart';
 import 'views/editDespesas_view.dart';
 import 'views/categoryAjust_view.dart';
+import 'views/filter_view.dart';
 
 abstract class AppRoutes {
   static const String home = '/';
   static const String addTransaction = '/add-transaction';
   static const String editDespesas = '/edit-despesas';
   static const String categoryAjust = '/category-ajust';
-
+  static const String filterTela = '/filter-view';
   static final GoRouter router = GoRouter(
     initialLocation: home,
     routes: [
@@ -27,6 +28,10 @@ abstract class AppRoutes {
        GoRoute(
         path: categoryAjust,
         builder: (context, state) => const CategoryAjustView(),
+      ),
+       GoRoute(
+        path: filterTela,
+        builder: (context, state) => const FilterView(),
       ),
     ],
     

@@ -111,9 +111,7 @@ class _HomeViewState extends State<HomeView> {
                         '${transaction.date.day.toString().padLeft(2, '0')}/${transaction.date.month.toString().padLeft(2, '0')}/${transaction.date.year}';
 
                     // Define o nome de exibição (se establishment for null, usa o id da subcategoria ou um texto padrão)
-                    final titleText = (transaction.establishment != null && transaction.establishment!.isNotEmpty)
-                        ? transaction.establishment!
-                        : transaction.subCategoryId; // Ou um rótulo genérico se preferir
+                  final titleText = '${transaction.categoryName} - ${transaction.subCategoryName}';// Ou um rótulo genérico se preferir
 
                     return Dismissible(
                       key: Key(transaction.id),

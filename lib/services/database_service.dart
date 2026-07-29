@@ -3,7 +3,7 @@ import 'package:sqflite/sqflite.dart';
 import '../models/transaction_model.dart';
 import '../models/category_model.dart';
 import '../models/sub_category_model.dart';
-import '../utils/default_categories.dart'; 
+import '../utils/default_categories.dart';
 
 class DatabaseService {
   static final DatabaseService instance = DatabaseService._init();
@@ -22,8 +22,9 @@ class DatabaseService {
     final path = join(dbPath, filePath);
 
     return await openDatabase(
-      path, 
-      version: 3, // Subi para a versão 3 para forçar o recarregamento com os dados padrão
+      path,
+      version:
+          4, // Subi para a versão 3 para forçar o recarregamento com os dados padrão
       onCreate: _createDB,
       onUpgrade: _onUpgrade,
       onConfigure: _onConfigure,
@@ -47,9 +48,9 @@ class DatabaseService {
     await db.execute('''
       CREATE TABLE subcategories(
         idSubCategory TEXT PRIMARY KEY,
-        categoryId TEXT NOT NULL,
+        idCategory TEXT NOT NULL,
         subCategoryName TEXT NOT NULL,
-        FOREIGN KEY (categoryId) REFERENCES categories (idCategory) ON DELETE CASCADE
+        FOREIGN KEY (idCategory) REFERENCES categories (idCategory) ON DELETE CASCADE
       )
     ''');
 
@@ -57,14 +58,14 @@ class DatabaseService {
     await db.execute('''
       CREATE TABLE transactions(
         id TEXT PRIMARY KEY,
-        categoryId TEXT NOT NULL,
-        subCategoryId TEXT NOT NULL,
+        idCategory TEXT NOT NULL,
+        idSubCategory TEXT NOT NULL,
         establishment TEXT,
         amount REAL NOT NULL,
         date INTEGER NOT NULL,
         description TEXT,
-        FOREIGN KEY (categoryId) REFERENCES categories (idCategory),
-        FOREIGN KEY (subCategoryId) REFERENCES subcategories (idSubCategory)
+        FOREIGN KEY (idCategory) REFERENCES categories (idCategory),
+        FOREIGN KEY (idSubCategory) REFERENCES subcategories (idSubCategory)
       )
     ''');
 
@@ -100,7 +101,11 @@ class DatabaseService {
   // --- CATEGORIAS ---
   Future<void> insertCategory(CategoryModel category) async {
     final db = await instance.database;
-    await db.insert('categories', category.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'categories',
+      category.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<List<CategoryModel>> getAllCategories() async {
@@ -122,21 +127,31 @@ class DatabaseService {
   Future<int> deleteCategory(String idCategory) async {
     final db = await instance.database;
     // Graças ao ON DELETE CASCADE, deletar a categoria apaga as subcategorias ligadas a ela
-    return await db.delete('categories', where: 'idCategory = ?', whereArgs: [idCategory]);
+    return await db.delete(
+      'categories',
+      where: 'idCategory = ?',
+      whereArgs: [idCategory],
+    );
   }
 
   // --- SUBCATEGORIAS ---
   Future<void> insertSubCategory(SubCategoryModel subCategory) async {
     final db = await instance.database;
-    await db.insert('subcategories', subCategory.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'subcategories',
+      subCategory.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
-  Future<List<SubCategoryModel>> getSubCategoriesByCategoryId(String categoryId) async {
+  Future<List<SubCategoryModel>> getSubCategoriesByCategoryId(
+    String idCategory,
+  ) async {
     final db = await instance.database;
     final result = await db.query(
       'subcategories',
-      where: 'categoryId = ?',
-      whereArgs: [categoryId],
+      where: 'idCategory = ?',
+      whereArgs: [idCategory],
       orderBy: 'subCategoryName ASC',
     );
     return result.map((json) => SubCategoryModel.fromMap(json)).toList();
@@ -154,7 +169,11 @@ class DatabaseService {
 
   Future<int> deleteSubCategory(String idSubCategory) async {
     final db = await instance.database;
-    return await db.delete('subcategories', where: 'idSubCategory = ?', whereArgs: [idSubCategory]);
+    return await db.delete(
+      'subcategories',
+      where: 'idSubCategory = ?',
+      whereArgs: [idSubCategory],
+    );
   }
 
   // --- TRANSAÇÕES ---
@@ -167,14 +186,25 @@ class DatabaseService {
     );
   }
 
-  Future<List<TransactionModel>> getAllTransactions() async {
-    final db = await instance.database;
-    final result = await db.query('transactions', orderBy: 'date DESC');
-    return result.map((json) => TransactionModel.fromMap(json)).toList();
-  }
-
   Future<int> deleteTransaction(String id) async {
     final db = await instance.database;
     return await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<List<TransactionModel>> getAllTransactions() async {
+    final db = await instance.database;
+    // Realiza a junção para buscar id + nome de cada tabela
+    final result = await db.rawQuery('''
+    SELECT 
+      t.*,
+      c.categoryName AS categoryName,
+      s.subCategoryName AS subCategoryName
+    FROM transactions t
+    LEFT JOIN categories c ON t.idCategory = c.idCategory
+    LEFT JOIN subcategories s ON t.idSubCategory = s.idSubCategory
+    ORDER BY t.date DESC
+  ''');
+
+    return result.map((map) => TransactionModel.fromMap(map)).toList();
   }
 }

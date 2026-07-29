@@ -113,8 +113,8 @@ class _AddTransactionViewState extends State<AddTransactionView> {
 
       final newTransaction = TransactionModel(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
-        categoryId: _selectedCategoryId!,
-        subCategoryId: _selectedSubCategoryId!,
+        idCategory: _selectedCategoryId!,
+        idSubCategory: _selectedSubCategoryId!,
         establishment: establishmentText.isEmpty ? null : establishmentText,
         amount: amount,
         date: _selectedDate,

@@ -14,25 +14,25 @@ class DefaultCategories {
 
   static const List<SubCategoryModel> subCategories = [
     // --- Alimentação ---
-    SubCategoryModel(idSubCategory: 'sub_restaurante', categoryId: 'cat_alimentacao', subCategoryName: 'Restaurante'),
-    SubCategoryModel(idSubCategory: 'sub_padaria', categoryId: 'cat_alimentacao', subCategoryName: 'Padaria'),
+    SubCategoryModel(idSubCategory: 'sub_restaurante', idCategory: 'cat_alimentacao', subCategoryName: 'Restaurante'),
+    SubCategoryModel(idSubCategory: 'sub_padaria', idCategory: 'cat_alimentacao', subCategoryName: 'Padaria'),
 
     // --- Mercado ---
-    SubCategoryModel(idSubCategory: 'sub_agropecuaria', categoryId: 'cat_mercado', subCategoryName: 'Agropecuária (Pets)'),
-    SubCategoryModel(idSubCategory: 'sub_suplementos', categoryId: 'cat_mercado', subCategoryName: 'Suplementos'),
-    SubCategoryModel(idSubCategory: 'sub_produtos_naturais', categoryId: 'cat_mercado', subCategoryName: 'Produtos Naturais'),
+    SubCategoryModel(idSubCategory: 'sub_agropecuaria', idCategory: 'cat_mercado', subCategoryName: 'Agropecuária (Pets)'),
+    SubCategoryModel(idSubCategory: 'sub_suplementos', idCategory: 'cat_mercado', subCategoryName: 'Suplementos'),
+    SubCategoryModel(idSubCategory: 'sub_produtos_naturais', idCategory: 'cat_mercado', subCategoryName: 'Produtos Naturais'),
 
     // --- Transporte ---
-    SubCategoryModel(idSubCategory: 'sub_combustivel', categoryId: 'cat_transporte', subCategoryName: 'Combustível'),
-    SubCategoryModel(idSubCategory: 'sub_manutencao_transp', categoryId: 'cat_transporte', subCategoryName: 'Manutenção'),
+    SubCategoryModel(idSubCategory: 'sub_combustivel', idCategory: 'cat_transporte', subCategoryName: 'Combustível'),
+    SubCategoryModel(idSubCategory: 'sub_manutencao_transp', idCategory: 'cat_transporte', subCategoryName: 'Manutenção'),
 
     // --- Moradia ---
-    SubCategoryModel(idSubCategory: 'sub_manutencao_moradia', categoryId: 'cat_moradia', subCategoryName: 'Manutenção'),
-    SubCategoryModel(idSubCategory: 'sub_reforma', categoryId: 'cat_moradia', subCategoryName: 'Reforma'),
-    SubCategoryModel(idSubCategory: 'sub_benfeitoria', categoryId: 'cat_moradia', subCategoryName: 'Benfeitoria'),
+    SubCategoryModel(idSubCategory: 'sub_manutencao_moradia', idCategory: 'cat_moradia', subCategoryName: 'Manutenção'),
+    SubCategoryModel(idSubCategory: 'sub_reforma', idCategory: 'cat_moradia', subCategoryName: 'Reforma'),
+    SubCategoryModel(idSubCategory: 'sub_benfeitoria', idCategory: 'cat_moradia', subCategoryName: 'Benfeitoria'),
 
     // --- Lazer ---
-    SubCategoryModel(idSubCategory: 'sub_passeio', categoryId: 'cat_lazer', subCategoryName: 'Passeio'),
-    SubCategoryModel(idSubCategory: 'sub_viagem', categoryId: 'cat_lazer', subCategoryName: 'Viagem'),
+    SubCategoryModel(idSubCategory: 'sub_passeio', idCategory: 'cat_lazer', subCategoryName: 'Passeio'),
+    SubCategoryModel(idSubCategory: 'sub_viagem', idCategory: 'cat_lazer', subCategoryName: 'Viagem'),
   ];
 }

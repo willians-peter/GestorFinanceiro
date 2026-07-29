@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../app_routes.dart'; 
+import '../app_routes.dart';
 
 class NavigationAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String title;
@@ -16,9 +16,8 @@ class NavigationAppBar extends StatelessWidget implements PreferredSizeWidget {
           icon: const Icon(Icons.menu),
           tooltip: 'Navegar para...',
           onSelected: (route) {
-            
             if (GoRouterState.of(context).matchedLocation == route) return;
-           
+
             context.go(route);
           },
           itemBuilder: (BuildContext context) => [
@@ -34,13 +33,20 @@ class NavigationAppBar extends StatelessWidget implements PreferredSizeWidget {
               ),
             ),
             const PopupMenuItem<String>(
+              value: AppRoutes.filterTela,
+              child: ListTile(
+                leading: Icon(Icons.filter),
+                title: Text('Relatórios'),
+              ),
+            ),
+            const PopupMenuItem<String>(
               value: AppRoutes.editDespesas,
               child: ListTile(
                 leading: Icon(Icons.edit),
                 title: Text('Editar Despesas'),
               ),
             ),
-              const PopupMenuItem<String>(
+            const PopupMenuItem<String>(
               value: AppRoutes.categoryAjust,
               child: ListTile(
                 leading: Icon(Icons.edit),
@@ -53,7 +59,6 @@ class NavigationAppBar extends StatelessWidget implements PreferredSizeWidget {
     );
   }
 
-  
   @override
   Size get preferredSize => const Size.fromHeight(kToolbarHeight);
 }
